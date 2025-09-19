@@ -26,11 +26,9 @@ public class PasswordModel {
     
 
     // TODO: You can set this to whatever you like to verify that the password the user entered is correct
-    private static String verifyString = "cookies";
+    private static String verifyString = "abracadabra";
 
     public void loadPasswords() {
-        //hi
-        //CAN YOU SEE THIS!!!
         // TODO: Replace with loading passwords from file, you will want to add them to the passwords list defined above
         // TODO: Tips: Use buffered reader, make sure you split on separator, make sure you decrypt password
 
@@ -110,10 +108,9 @@ public class PasswordModel {
     // TODO: Use these functions above, and it will make it easier! Once you know encryption, decryption, etc works, you just need to tie them in
     public String generateSalt() {
         SecureRandom random = new SecureRandom();
-        byte[] salt = new byte[32];
-        random.nextBytes(salt);
-        String saltString = Base64.getEncoder().encodeToString(salt);
-        return saltString;
+        passwordFileSalt = new byte[32];
+        random.nextBytes(passwordFileSalt);
+        return Base64.getEncoder().encodeToString(passwordFileSalt);
     }
 
     public SecretKeySpec generateKey(String password, byte[] salt) {
