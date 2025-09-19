@@ -23,14 +23,41 @@ public class PasswordModel {
     static private String passwordFilePassword = "";
     static private byte [] passwordFileKey;
     static private byte [] passwordFileSalt;
+    
 
     // TODO: You can set this to whatever you like to verify that the password the user entered is correct
     private static String verifyString = "cookies";
 
-    private void loadPasswords() {
+    public void loadPasswords() {
         //hi
         // TODO: Replace with loading passwords from file, you will want to add them to the passwords list defined above
         // TODO: Tips: Use buffered reader, make sure you split on separator, make sure you decrypt password
+
+        String filePath = "passwords.txt"; // change to your file path
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+
+            while ((line = br.readLine()) != null) {
+                // Trim spaces and handle both space and comma separators
+                line = line.trim();
+                
+                // Split by whitespace or comma
+                String[] parts = line.split("[ ,]+");
+
+                if (parts.length >= 2) {
+                    String first = parts[0];
+                    String second = parts[1];
+
+                    System.out.println("First: " + first + ", Second: " + second);
+                } else {
+                    System.out.println("Skipping malformed line: " + line);
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public PasswordModel() {
