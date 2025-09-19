@@ -5,5 +5,7 @@ public class Test {
         System.out.println("Hello, World!");
         PasswordModel pm = new PasswordModel();
         pm.loadPasswords();
+
+        System.out.println("salt string: " + pm.generateSalt());
     }
 }
