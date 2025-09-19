@@ -105,7 +105,7 @@ public class PasswordModel {
 
         // TODO: Add the new password to the file
     }
-
+    
     // TODO: Tip: Break down each piece into individual methods, for example: generateSalt(), encryptPassword, generateKey(), saveFile, etc ...
     // TODO: Use these functions above, and it will make it easier! Once you know encryption, decryption, etc works, you just need to tie them in
     public String generateSalt() {
@@ -114,5 +114,19 @@ public class PasswordModel {
         random.nextBytes(salt);
         String saltString = Base64.getEncoder().encodeToString(salt);
         return saltString;
+    }
+
+    public SecretKeySpec generateKey(String password, byte[] salt) {
+        try {
+            KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 256);
+            SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+            byte[] keyBytes = factory.generateSecret(spec).getEncoded();
+            Cipher cipher = Cipher.getInstance("AES");
+            return new SecretKeySpec(keyBytes, "AES");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
     }
 }
