@@ -49,6 +49,27 @@ public class PasswordModel {
                     String second = parts[1];
 
                     System.out.println("First: " + first + ", Second: " + second);
+
+                    SecretKeySpec key = generateKey(passwordFilePassword, passwordFileSalt);
+                    try{
+                        Cipher cipher = Cipher.getInstance("AES");
+                        cipher.init(Cipher.DECRYPT_MODE, key);
+                        byte[] decodedToken = Base64.getDecoder().decode(second.getBytes());
+                        byte[] decryptedToken = cipher.doFinal(decodedToken);
+                        second = new String(decryptedToken);
+
+                        Password p = new Password(first, second);
+                        passwords.add(p);
+                        
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                      
+                    }
+
+
+                    Password p = new Password(first, second);
+                    passwords.add(p);
+
                 } else {
                     System.out.println("Skipping malformed line: " + line);
                 }
@@ -76,10 +97,27 @@ public class PasswordModel {
     static public boolean verifyPassword(String password) {
         passwordFilePassword = password; // DO NOT CHANGE
 
+        SecretKeySpec key = generateKey(passwordFilePassword, passwordFileSalt);
+        
+
+        try{
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.DECRYPT_MODE, key);
+            byte[] decodedToken = Base64.getDecoder().decode(password.getBytes());
+            byte[] decryptedToken = cipher.doFinal(decodedToken);
+            if(new String(decryptedToken).equals(verifyString)) {
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
         // TODO: Check first line and use salt to verify that you can decrypt the token using the password from the user
         // TODO: TIP !!! If you get an exception trying to decrypt, that also means they have the wrong passcode, return false!
 
-        return false;
+    
     }
 
     public ObservableList<Password> getPasswords() {
@@ -113,7 +151,7 @@ public class PasswordModel {
         return Base64.getEncoder().encodeToString(passwordFileSalt);
     }
 
-    public SecretKeySpec generateKey(String password, byte[] salt) {
+    public static SecretKeySpec generateKey(String password, byte[] salt) {
         try {
             KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 256);
             SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
