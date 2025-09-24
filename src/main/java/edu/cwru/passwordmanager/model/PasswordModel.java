@@ -20,9 +20,9 @@ public class PasswordModel {
 
     static private String separator = "\t";
 
-    static private String passwordFilePassword = "";
-    static private byte [] passwordFileKey;
-    static private byte [] passwordFileSalt;
+    static public String passwordFilePassword = "";
+    static public byte [] passwordFileKey;
+    static public byte [] passwordFileSalt;
     
 
     // TODO: You can set this to whatever you like to verify that the password the user entered is correct
@@ -36,28 +36,37 @@ public class PasswordModel {
 
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
+            line = br.readLine(); // skip first token line
+            String[] pp = line.split(separator);
+
 
             while ((line = br.readLine()) != null) {
                 // Trim spaces and handle both space and comma separators
                 line = line.trim();
                 
                 // Split by whitespace or comma
-                String[] parts = line.split("[ ,]+");
+                String[] parts = line.split(separator);
+                for (String part : parts) {
+                    System.out.println("Part: " + part);
+                }   
 
                 if (parts.length >= 2) {
                     String first = parts[0];
                     String second = parts[1];
 
                     System.out.println("First: " + first + ", Second: " + second);
+                    String s = new String(passwordFileSalt);
+                    System.out.println("Salt: "+s);
 
                     SecretKeySpec key = generateKey(passwordFilePassword, passwordFileSalt);
+                    System.out.println(key.toString());
                     try{
                         Cipher cipher = Cipher.getInstance("AES");
                         cipher.init(Cipher.DECRYPT_MODE, key);
                         byte[] decodedToken = Base64.getDecoder().decode(second.getBytes());
                         byte[] decryptedToken = cipher.doFinal(decodedToken);
                         second = new String(decryptedToken);
-
+                        System.out.println("First: " + first + ", Second: " + second);
                         Password p = new Password(first, second);
                         passwords.add(p);
                         
@@ -81,7 +90,7 @@ public class PasswordModel {
     }
 
     public PasswordModel() {
-        loadPasswords();
+        //loadPasswords();
     }
 
     static public boolean passwordFileExists() {
@@ -92,18 +101,49 @@ public class PasswordModel {
         passwordFile.createNewFile();
 
         // TODO: Use password to create token and save in file with salt (TIP: Save these just like you would save password)
+        //set password
+        passwordFilePassword = password; 
+
+        //generate salt for application
+        String hold = generateSalt();
+
+        //generate key for application
+        SecretKeySpec key = generateKey(passwordFilePassword, passwordFileSalt);
+        
+        try{  //encrypt verify string
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.ENCRYPT_MODE, key);
+            byte[] encryptedToken = cipher.doFinal(verifyString.getBytes());
+            String encodedToken = Base64.getEncoder().encodeToString(encryptedToken);
+
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(passwordFile))) {
+                //add salt and token to password file
+                writer.write(hold + separator + encodedToken);
+                writer.newLine();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     static public boolean verifyPassword(String password) {
         passwordFilePassword = password; // DO NOT CHANGE
 
-        SecretKeySpec key = generateKey(passwordFilePassword, passwordFileSalt);
-        
+        try (BufferedReader br = new BufferedReader(new FileReader("passwords.txt"))) {
+            //wehn password file exist, read first line to get salt and encrypted token
+            String line;
+            line = br.readLine(); 
+            String[] pp = line.split(separator);
+            passwordFileSalt = Base64.getDecoder().decode(pp[0]);
+            String tokenString = pp[1];
 
-        try{
+            //create key using user input password and salt stored in file
+            SecretKeySpec key = generateKey(passwordFilePassword, passwordFileSalt);
             Cipher cipher = Cipher.getInstance("AES");
             cipher.init(Cipher.DECRYPT_MODE, key);
-            byte[] decodedToken = Base64.getDecoder().decode(password.getBytes());
+            byte[] decodedToken = Base64.getDecoder().decode(tokenString.getBytes());
             byte[] decryptedToken = cipher.doFinal(decodedToken);
             if(new String(decryptedToken).equals(verifyString)) {
                 return true;
@@ -111,9 +151,8 @@ public class PasswordModel {
             return false;
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
         }
-
+        return false;
         // TODO: Check first line and use salt to verify that you can decrypt the token using the password from the user
         // TODO: TIP !!! If you get an exception trying to decrypt, that also means they have the wrong passcode, return false!
 
@@ -144,7 +183,7 @@ public class PasswordModel {
     
     // TODO: Tip: Break down each piece into individual methods, for example: generateSalt(), encryptPassword, generateKey(), saveFile, etc ...
     // TODO: Use these functions above, and it will make it easier! Once you know encryption, decryption, etc works, you just need to tie them in
-    public String generateSalt() {
+    public static String generateSalt() {
         SecureRandom random = new SecureRandom();
         passwordFileSalt = new byte[32];
         random.nextBytes(passwordFileSalt);
@@ -155,9 +194,8 @@ public class PasswordModel {
         try {
             KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 256);
             SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-            byte[] keyBytes = factory.generateSecret(spec).getEncoded();
-            Cipher cipher = Cipher.getInstance("AES");
-            return new SecretKeySpec(keyBytes, "AES");
+            passwordFileKey = factory.generateSecret(spec).getEncoded();
+            return new SecretKeySpec(passwordFileKey, "AES");
         } catch (Exception e) {
             e.printStackTrace();
             return null;
