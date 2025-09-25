@@ -195,4 +195,22 @@ public class PasswordModel {
         }
 
     }
+
+    public static String encryptPassword(String s){
+        try (BufferedReader br = new BufferedReader(new FileReader("passwords.txt"))) {
+            SecretKeySpec key = new SecretKeySpec(passwordFileKey, "AES");
+
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.ENCRYPT_MODE, key);
+
+            byte[] encryptedPassword = cipher.doFinal(s.getBytes());
+
+            System.out.println(Base64.getEncoder().encodeToString(encryptedPassword));
+
+            return Base64.getEncoder().encodeToString(encryptedPassword);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }
