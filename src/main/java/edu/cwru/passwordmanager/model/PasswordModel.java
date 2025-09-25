@@ -32,11 +32,11 @@ public class PasswordModel {
         // TODO: Replace with loading passwords from file, you will want to add them to the passwords list defined above
         // TODO: Tips: Use buffered reader, make sure you split on separator, make sure you decrypt password
 
-        String filePath = "passwords.txt"; // change to your file path
+        String filePath = "passwords.txt"; 
 
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
-            line = br.readLine(); // skip first token line
+            line = br.readLine(); // skip first line
             String[] pp = line.split(separator);
 
 
@@ -60,31 +60,22 @@ public class PasswordModel {
 
                     SecretKeySpec key = generateKey(passwordFilePassword, passwordFileSalt);
                     System.out.println(key.toString());
-                    try{
-                        Cipher cipher = Cipher.getInstance("AES");
-                        cipher.init(Cipher.DECRYPT_MODE, key);
-                        byte[] decodedToken = Base64.getDecoder().decode(second.getBytes());
-                        byte[] decryptedToken = cipher.doFinal(decodedToken);
-                        second = new String(decryptedToken);
-                        System.out.println("First: " + first + ", Second: " + second);
-                        Password p = new Password(first, second);
-                        passwords.add(p);
-                        
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                      
-                    }
-
-
+                    
+                    Cipher cipher = Cipher.getInstance("AES");
+                    cipher.init(Cipher.DECRYPT_MODE, key);
+                    byte[] decodedToken = Base64.getDecoder().decode(second.getBytes());
+                    byte[] decryptedToken = cipher.doFinal(decodedToken);
+                    second = new String(decryptedToken);
+                    System.out.println("First: " + first + ", Second: " + second);
                     Password p = new Password(first, second);
                     passwords.add(p);
-
+        
                 } else {
                     System.out.println("Skipping malformed line: " + line);
                 }
             }
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -177,6 +168,21 @@ public class PasswordModel {
 
     public void addPassword(Password password) {
         passwords.add(password);
+        String hold = password.getLabel();
+        String pass = password.getPassword();
+        SecretKeySpec key = new SecretKeySpec(passwordFileKey, "AES");
+        try{  
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.ENCRYPT_MODE, key);
+            byte[] encryptedToken = cipher.doFinal(pass.getBytes());
+            String encodedToken = Base64.getEncoder().encodeToString(encryptedToken);
+            BufferedWriter writer = new BufferedWriter(new FileWriter(passwordFile,true));
+            writer.write(hold + separator + encodedToken);
+            writer.newLine();
+            writer.close();
+        } catch (Exception e) {
+                e.printStackTrace();
+        }
 
         // TODO: Add the new password to the file
     }
