@@ -36,39 +36,26 @@ public class PasswordModel {
 
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
+            
             line = br.readLine(); // skip first line
+            System.out.println(line);
             String[] pp = line.split(separator);
 
 
             while ((line = br.readLine()) != null) {
+                System.out.println(line);
                 // Trim spaces and handle both space and comma separators
                 line = line.trim();
                 
                 // Split by whitespace or comma
                 String[] parts = line.split(separator);
-                for (String part : parts) {
-                    System.out.println("Part: " + part);
-                }   
+          
 
                 if (parts.length >= 2) {
                     String first = parts[0];
                     String second = parts[1];
+              
 
-                    System.out.println("First: " + first + ", Second: " + second);
-                    String s = new String(passwordFileSalt);
-                    System.out.println("Salt: "+s);
-
-                    SecretKeySpec key = generateKey(passwordFilePassword, passwordFileSalt);
-                    System.out.println(key.toString());
-                    
-                    Cipher cipher = Cipher.getInstance("AES");
-                    cipher.init(Cipher.DECRYPT_MODE, key);
-                    byte[] decodedToken = Base64.getDecoder().decode(second.getBytes());
-                    byte[] decryptedToken = cipher.doFinal(decodedToken);
-                    second = new String(decryptedToken);
-                    System.out.println("First: " + first + ", Second: " + second);
-                    Password p = new Password(first, second);
-                    passwords.add(p);
         
                 } else {
                     System.out.println("Skipping malformed line: " + line);
@@ -81,7 +68,7 @@ public class PasswordModel {
     }
 
     public PasswordModel() {
-        //loadPasswords();
+        loadPasswords();
     }
 
     static public boolean passwordFileExists() {
