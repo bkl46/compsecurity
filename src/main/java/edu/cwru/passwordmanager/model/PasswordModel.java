@@ -10,6 +10,10 @@ import java.io.*;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
 import java.util.Base64;
+import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.Path;
 
 
 public class PasswordModel {
@@ -54,6 +58,10 @@ public class PasswordModel {
                 if (parts.length >= 2) {
                     String first = parts[0];
                     String second = parts[1];
+
+                    String decryptedPassword = decrypt(second);
+                    Password p = new Password(first, decryptedPassword);
+                    passwords.add(p);
               
 
         
@@ -103,7 +111,7 @@ public class PasswordModel {
             e.printStackTrace();
         }
     }
-
+    
     static public boolean verifyPassword(String password) {
         passwordFilePassword = password; // DO NOT CHANGE
 
@@ -147,6 +155,20 @@ public class PasswordModel {
 
     public void updatePassword(Password password, int index) {
         passwords.set(index, password);
+        Path path = Paths.get("passwords.txt");
+        try{
+            List<String> lines = Files.readAllLines(path);
+
+            String content = password.getLabel() + separator + encryptPassword(password.getPassword());
+            lines.set(index + 1, content);
+            Files.write(path, lines); 
+
+            for(Password p : passwords){
+                System.out.println(p.getLabel() + " " + p.getPassword());
+            }
+        } catch (Exception e) {
+            //e.printStackTrace();
+        }
 
         // TODO: Update the file with the new password information
     }
@@ -206,6 +228,20 @@ public class PasswordModel {
             System.out.println(Base64.getEncoder().encodeToString(encryptedPassword));
 
             return Base64.getEncoder().encodeToString(encryptedPassword);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    static public String decrypt(String message) {
+        try {
+            SecretKeySpec key = new SecretKeySpec(passwordFileKey, "AES");
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.DECRYPT_MODE, key);
+            byte[] decodedToken = Base64.getDecoder().decode(message.getBytes());
+            byte[] decryptedToken = cipher.doFinal(decodedToken);
+            return new String(decryptedToken);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
