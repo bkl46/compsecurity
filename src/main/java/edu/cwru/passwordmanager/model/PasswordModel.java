@@ -97,7 +97,6 @@ public class PasswordModel {
         SecretKeySpec key = generateKey(passwordFilePassword, passwordFileSalt);
         
         try{  //encrypt verify string
-
             String encodedToken = encryptPassword(verifyString);
 
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(passwordFile))) {
@@ -116,7 +115,7 @@ public class PasswordModel {
         passwordFilePassword = password; // DO NOT CHANGE
 
         try (BufferedReader br = new BufferedReader(new FileReader("passwords.txt"))) {
-            //wehn password file exist, read first line to get salt and encrypted token
+            //when password file exist, read first line to get salt and encrypted token
             String line;
             line = br.readLine(); 
             String[] pp = line.split(separator);
@@ -137,10 +136,6 @@ public class PasswordModel {
             e.printStackTrace();
         }
         return false;
-        // TODO: Check first line and use salt to verify that you can decrypt the token using the password from the user
-        // TODO: TIP !!! If you get an exception trying to decrypt, that also means they have the wrong passcode, return false!
-
-    
     }
 
     public ObservableList<Password> getPasswords() {
@@ -150,7 +145,24 @@ public class PasswordModel {
     public void deletePassword(int index) {
         passwords.remove(index);
 
-        // TODO: Remove it from file
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(passwordFile));
+            String header = br.readLine();
+            br.close();
+
+            BufferedWriter writer = new BufferedWriter(new FileWriter(passwordFile));
+            writer.write(header);
+            writer.newLine();
+
+            for (Password p : passwords){
+                writer.write(p.getLabel() + separator + p.getPassword());
+                writer.newLine();
+            }
+
+            writer.close();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     public void updatePassword(Password password, int index) {
