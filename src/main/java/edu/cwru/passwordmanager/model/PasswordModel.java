@@ -89,10 +89,8 @@ public class PasswordModel {
         SecretKeySpec key = generateKey(passwordFilePassword, passwordFileSalt);
         
         try{  //encrypt verify string
-            Cipher cipher = Cipher.getInstance("AES");
-            cipher.init(Cipher.ENCRYPT_MODE, key);
-            byte[] encryptedToken = cipher.doFinal(verifyString.getBytes());
-            String encodedToken = Base64.getEncoder().encodeToString(encryptedToken);
+
+            String encodedToken = encryptPassword(verifyString);
 
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(passwordFile))) {
                 //add salt and token to password file
@@ -194,5 +192,23 @@ public class PasswordModel {
             return null;
         }
 
+    }
+
+    public static String encryptPassword(String s){
+        try {
+            SecretKeySpec key = new SecretKeySpec(passwordFileKey, "AES");
+
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.ENCRYPT_MODE, key);
+
+            byte[] encryptedPassword = cipher.doFinal(s.getBytes());
+
+            System.out.println(Base64.getEncoder().encodeToString(encryptedPassword));
+
+            return Base64.getEncoder().encodeToString(encryptedPassword);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }
