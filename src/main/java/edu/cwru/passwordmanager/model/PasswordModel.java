@@ -195,7 +195,7 @@ public class PasswordModel {
     }
 
     public static String encryptPassword(String s){
-        try (BufferedReader br = new BufferedReader(new FileReader("passwords.txt"))) {
+        try {
             SecretKeySpec key = new SecretKeySpec(passwordFileKey, "AES");
 
             Cipher cipher = Cipher.getInstance("AES");
