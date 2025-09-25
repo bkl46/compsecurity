@@ -159,7 +159,24 @@ public class PasswordModel {
     public void deletePassword(int index) {
         passwords.remove(index);
 
-        // TODO: Remove it from file
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(passwordFile));
+            String header = br.readLine();
+            br.close();
+
+            BufferedWriter writer = new BufferedWriter(new FileWriter(passwordFile));
+            writer.write(header);
+            writer.newLine();
+
+            for (Password p : passwords){
+                writer.write(p.getLabel() + separator + p.getPassword());
+                writer.newLine();
+            }
+
+            writer.close();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     public void updatePassword(Password password, int index) {
