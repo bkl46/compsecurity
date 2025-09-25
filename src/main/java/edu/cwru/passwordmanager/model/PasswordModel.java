@@ -111,10 +111,7 @@ public class PasswordModel {
         SecretKeySpec key = generateKey(passwordFilePassword, passwordFileSalt);
         
         try{  //encrypt verify string
-            Cipher cipher = Cipher.getInstance("AES");
-            cipher.init(Cipher.ENCRYPT_MODE, key);
-            byte[] encryptedToken = cipher.doFinal(verifyString.getBytes());
-            String encodedToken = Base64.getEncoder().encodeToString(encryptedToken);
+            String encodedToken = encryptPassword(verifyString);
 
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(passwordFile))) {
                 //add salt and token to password file
@@ -132,7 +129,7 @@ public class PasswordModel {
         passwordFilePassword = password; // DO NOT CHANGE
 
         try (BufferedReader br = new BufferedReader(new FileReader("passwords.txt"))) {
-            //wehn password file exist, read first line to get salt and encrypted token
+            //when password file exist, read first line to get salt and encrypted token
             String line;
             line = br.readLine(); 
             String[] pp = line.split(separator);
@@ -153,10 +150,6 @@ public class PasswordModel {
             e.printStackTrace();
         }
         return false;
-        // TODO: Check first line and use salt to verify that you can decrypt the token using the password from the user
-        // TODO: TIP !!! If you get an exception trying to decrypt, that also means they have the wrong passcode, return false!
-
-    
     }
 
     public ObservableList<Password> getPasswords() {
@@ -201,5 +194,23 @@ public class PasswordModel {
             return null;
         }
 
+    }
+
+    public static String encryptPassword(String s){
+        try (BufferedReader br = new BufferedReader(new FileReader("passwords.txt"))) {
+            SecretKeySpec key = new SecretKeySpec(passwordFileKey, "AES");
+
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.ENCRYPT_MODE, key);
+
+            byte[] encryptedPassword = cipher.doFinal(s.getBytes());
+
+            System.out.println(Base64.getEncoder().encodeToString(encryptedPassword));
+
+            return Base64.getEncoder().encodeToString(encryptedPassword);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }
