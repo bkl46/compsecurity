@@ -24,9 +24,9 @@ public class PasswordModel {
 
     static private String separator = "\t";
 
-    static public String passwordFilePassword = "";
-    static public byte [] passwordFileKey;
-    static public byte [] passwordFileSalt;
+    static private String passwordFilePassword = "";
+    static private byte [] passwordFileKey;
+    static private byte [] passwordFileSalt;
     
 
     // TODO: You can set this to whatever you like to verify that the password the user entered is correct
@@ -155,7 +155,7 @@ public class PasswordModel {
             writer.newLine();
 
             for (Password p : passwords){
-                writer.write(p.getLabel() + separator + p.getPassword());
+                writer.write(p.getLabel() + separator + encryptPassword(p.getPassword()));
                 writer.newLine();
             }
 
